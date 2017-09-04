@@ -34,7 +34,7 @@ When you adding a new  step to your process you get to choose a template. "Read 
 
 ![Image](images/CreatingStep.png)
 
-Here you name your build step (chooses and adequate name) and select whether you run the step on Deployment Targets or on the Octopus Server. Consider what you are trying to achieve. If you need to just get a single secret or a handful of secrets from Vault that are independent from deployment targets your best bet is using Octopus Server and leaving advanced settings alone. This way, the step will only run once no matter how many deployment targets you have.
+Here you name your build step (choose an adequate name) and select whether you run the step on Deployment Targets or on the Octopus Server. Consider what you are trying to achieve. If you need to just get a single secret or a handful of secrets from Vault that are independent from deployment targets your best bet is using Octopus Server and leaving advanced settings alone. This way, the step will only run once no matter how many deployment targets you have.
 
 If you need to get a secret per deployment target, you probably still want to run the step on the Octopus Deploy server. Configure advanced settings to run on behalf of a role that contains all the deployment targets that you need to get a secret for. The step then will run once per deployment target. You can use the "Output Variable Name" parameter, so that the step writes different output variables per different targets.
 
@@ -44,13 +44,13 @@ After you configured the above, procedd setting your step parameters.
 
 ![Image](images/StepParameters.png)
 
-- Vault Url - url to your Vault installation. Include the Url Scheme and port, do not include the trailing slash
-- Paths to secrets - a path inside Vault per line. Can be prefixed by a label separate from the path with colon. The labels are used as a part of Output Variables (see below) to destinguish between keys that come from different secret paths. Since these keys can potentially have the same names they are prefixed by the label. If a label is not provided it's generated from the hash of the path itself.
-- Role Id and Secret Id - used to anuthenticate with Vault against AppRole authentication backend. See below. Ignored if Vault Token is specified.
-- Vault Token - alternative form of authentication with Vault.
-- Use Windows Credential Manager. Ignored if Vault Token is specified. Use Windows Credential Manager to reterive Role Id and Secret Id. In this case Role Id and Secret Id parameters contain the names in the Windows Credential Manager. See below.
-- Renew Token. Ignored if Vault Token is not specified. If checked, a call to Vault self-renew is made in the end of the step.
-- Output Variable prefix - optional prefix for Output Variables. See below.
+- **Vault Url** - url to your Vault installation. Include the Url scheme and port, do not include the trailing slash
+- **Paths to secrets** - a path inside Vault per line. Can be prefixed by a label separate from the path with colon. The labels are used as a part of Output Variables (see below) to destinguish between keys that come from different secret paths. Since these keys can potentially have the same names they are prefixed by the label. If a label is not provided it's generated from the hash of the path itself.
+- **Role Id** and **Secret Id** - used to anuthenticate with Vault against AppRole authentication backend. See below. Ignored if Vault Token is specified.
+- **Vault Token** - alternative to Role Id/Secret Id form of authentication with Vault.
+- **Use Windows Credential Manager**. Ignored if Vault Token is specified. Use Windows Credential Manager to reterive Role Id and Secret Id. In this case Role Id and Secret Id parameters contain the names in the Windows Credential Manager. See below.
+- **Renew Token**. Ignored if Vault Token is not specified. If checked, a call to Vault self-renew is made in the end of the step.
+- **Output Variable Prefix** - optional prefix for Output Variables. See below.
 
 ## Authenticating with a token
 
@@ -60,13 +60,13 @@ If you are running deployments unattended on schedule, you can create a periodic
 
 ## Authenitcation with an AppRole
 
-Alternatively you can authenticated with Roled Id and Secret Id agains AppRole Vault authentication backend. It is recommended to set up both Role Id and Secret Id in vault as sensitive variabled (regardless of the vaule of Use Windows Credential Manager flag).
+Alternatively you can authenticate with Roled Id and Secret Id against AppRole Vault authentication backend. It is recommended to set up both Role Id and Secret Id in vault as sensitive variables (regardless of the vaule of Use Windows Credential Manager flag).
 
-The step template will use Roled Id and Secret Id furnished, to obtain a brand new Vault token each time the step is run. The step will revoke the token straight after it has been used.
+The step template will use Roled Id and Secret Id provided, to obtain a brand new Vault token each time the step is run. The step will revoke the token straight after it has been used.
 
 ## Windows Credential Manager
 
-Instead of keeping the Roled Id and Secret Id in Octopus, it's possible to keep those in Windows Credential manager. Let's assume that our Roled Id is `cff28e44-569f-4321-9b22-de1452f4644d` and our Secret Id is `75b3add6-1ab3-491d-b86f-74f82fa351fd`. First, RDP to your Octopus Deployment Server and  install CredentialManager Powershell module:
+Instead of keeping the Roled Id and Secret Id in Octopus, it's possible to keep those in Windows Credential manager on the machine the step runs on. Ususally it will be the Octopus Deploy Server machine. Let's assume that our Roled Id is `cff28e44-569f-4321-9b22-de1452f4644d` and our Secret Id is `75b3add6-1ab3-491d-b86f-74f82fa351fd`. First, RDP to your Octopus Deployment Server and  install CredentialManager Powershell module:
 
 ```Powershell
 Install-Module CredentialManager –Scope AllUsers -Force
@@ -104,3 +104,9 @@ These exclusions allow for simpler Output Variable in simpler scenarios. For exa
 ```
 
 Note, that the exact names of the Output Variables created are written in the Build Step log output.
+
+You can access the variables above from a powershell script step in the following form.
+
+```Powershell
+$OctopusParameters["Octopus.Action[Step Name].Output.prefix.label.key"]
+```
