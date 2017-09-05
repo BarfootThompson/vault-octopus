@@ -1,3 +1,4 @@
+Import-Module CredentialManager
 function Get-Hash {
 param(
     [string]$s
