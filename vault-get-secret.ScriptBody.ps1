@@ -72,6 +72,11 @@ if ("#{token}" -ne "##{token}") {
     Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"} "#{vaultUrl}/v1/auth/token/revoke-self" -Method post -UseBasicParsing | Out-Null
 }
 
+$sensitiveOutputVariablesSupported = ((Get-Command 'Set-OctopusVariable').Parameters.GetEnumerator() | Where-Object { $_.key -eq "Sensitive" }) -ne $null
+if ($sensitiveOutputVariablesSupported -ne $true) }
+    Write-Warning "Values from vault will be added to the Octopus deployment pipeline as normal values. Please upgrade to Octopus 2018.5.2 or newer so the values from your vault can be added as sensitive values."
+}
+ 
 $res | Foreach-Object {
     if ("#{resultName}" -ne "##{resultName}") {
         $prefix = "#{resultName}."
@@ -88,5 +93,9 @@ $res | Foreach-Object {
     $name = $prefix + $label + $_.name
 
     "Writing ##{Octopus.Action[#{Octopus.Step.Name}].Output.$name}" | Write-Host
-    Set-OctopusVariable -name $name -value $_.value -sensitive
+    if (sensitiveOutputVariablesSupported -eq $true) {
+        Set-OctopusVariable -name $name -value $_.value -sensitive
+    } else {
+        Set-OctopusVariable -name $name -value $_.value
+    }
 }
