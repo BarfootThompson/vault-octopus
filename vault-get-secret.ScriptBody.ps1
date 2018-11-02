@@ -88,5 +88,5 @@ $res | Foreach-Object {
     $name = $prefix + $label + $_.name
 
     "Writing ##{Octopus.Action[#{Octopus.Step.Name}].Output.$name}" | Write-Host
-    Set-OctopusVariable -name $name -value $_.value
+    Set-OctopusVariable -name $name -value $_.value -sensitive
 }
