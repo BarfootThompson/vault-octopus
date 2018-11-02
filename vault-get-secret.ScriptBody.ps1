@@ -93,7 +93,7 @@ $res | Foreach-Object {
     $name = $prefix + $label + $_.name
 
     "Writing ##{Octopus.Action[#{Octopus.Step.Name}].Output.$name}" | Write-Host
-    if (sensitiveOutputVariablesSupported -eq $true) {
+    if ($sensitiveOutputVariablesSupported) {
         Set-OctopusVariable -name $name -value $_.value -sensitive
     } else {
         Set-OctopusVariable -name $name -value $_.value
