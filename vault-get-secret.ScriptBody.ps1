@@ -73,7 +73,7 @@ if ("#{token}" -ne "##{token}") {
 }
 
 $sensitiveOutputVariablesSupported = ((Get-Command 'Set-OctopusVariable').Parameters.GetEnumerator() | Where-Object { $_.key -eq "Sensitive" }) -ne $null
-if ($sensitiveOutputVariablesSupported -ne $true) }
+if (-not $sensitiveOutputVariablesSupported) }
     Write-Warning "Values from vault will be added to the Octopus deployment pipeline as normal values. Please upgrade to Octopus 2018.5.2 or newer so the values from your vault can be added as sensitive values."
 }
  
