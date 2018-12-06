@@ -73,7 +73,7 @@ if ("#{token}" -ne "##{token}") {
 }
 
 $sensitiveOutputVariablesSupported = ((Get-Command 'Set-OctopusVariable').Parameters.GetEnumerator() | Where-Object { $_.key -eq "Sensitive" }) -ne $null
-if (-not $sensitiveOutputVariablesSupported) }
+if (-not $sensitiveOutputVariablesSupported -and !("#{notsensitive}" -eq "True")) {
     Write-Warning "Values from vault will be added to the Octopus deployment pipeline as normal values. Please upgrade to Octopus 2018.5.2 or newer so the values from your vault can be added as sensitive values."
 }
  
@@ -93,7 +93,7 @@ $res | Foreach-Object {
     $name = $prefix + $label + $_.name
 
     "Writing ##{Octopus.Action[#{Octopus.Step.Name}].Output.$name}" | Write-Host
-    if ($sensitiveOutputVariablesSupported) {
+    if ($sensitiveOutputVariablesSupported -and !("#{notsensitive}" -eq "True")) {
         Set-OctopusVariable -name $name -value $_.value -sensitive
     } else {
         Set-OctopusVariable -name $name -value $_.value
