@@ -54,11 +54,13 @@ if ("#{token}" -ne "##{token}") {
 
 $path = @("#{path}" -split "`n" | Foreach-Object { $_.Trim() })
 $res = $path | Foreach-Object {
-    $current = Split-SecretPath $_
-    "Obtaining secret from $($current.path)" | Write-Host
-    $secret = ((Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"}  "#{vaultUrl}/v1/$($current.path)" -Method get -UseBasicParsing).Content | ConvertFrom-Json).data
-    $secret.psobject.properties | Foreach-Object {
-        "{'label': '$($current.label)', 'explicit': '$($current.explicit)', 'name': '$($_.Name)', 'value': '$($_.value)'}" | ConvertFrom-Json   
+	if (![string]::IsNullOrWhiteSpace($current)) {
+    	$current = Split-SecretPath $_
+    	"Obtaining secret from $($current.path)" | Write-Host
+    	$secret = ((Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"}  "#{vaultUrl}/v1/$($current.path)" -Method get -UseBasicParsing).Content | ConvertFrom-Json).data
+    	$secret.psobject.properties | Foreach-Object {
+        	"{'label': '$($current.label)', 'explicit': '$($current.explicit)', 'name': '$($_.Name)', 'value': '$($_.value)'}" | ConvertFrom-Json   
+        }
     }
 }
 
