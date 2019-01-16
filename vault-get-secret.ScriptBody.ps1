@@ -54,7 +54,7 @@ if ("#{token}" -ne "##{token}") {
 
 $path = @("#{path}" -split "`n" | Foreach-Object { $_.Trim() })
 $res = $path | Foreach-Object {
-	if (![string]::IsNullOrWhiteSpace($current)) {
+	if (![string]::IsNullOrWhiteSpace($_)) {
     	$current = Split-SecretPath $_
     	"Obtaining secret from $($current.path)" | Write-Host
     	$secret = ((Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"}  "#{vaultUrl}/v1/$($current.path)" -Method get -UseBasicParsing).Content | ConvertFrom-Json).data
