@@ -28,7 +28,22 @@ param(
         $label = Get-Hash $tokens[0]
         $value = $tokens[0]
     }
-    return "{'label': '$label', 'path': '$value', 'explicit': '$explicit'}" | ConvertFrom-Json
+
+   if ("#{engineVersion}" -eq "v1") {
+       return "{'label': '$label', 'path': '$value', 'explicit': '$explicit'}" | ConvertFrom-Json
+   } elseif ("#{engineVersion}" -eq "v2") {
+       $tokens = @($value -split '\|' | Foreach-Object { $_.Trim() })
+       if ($tokens.Length -ne 2 ) {
+           "$value does not contain exactly one '|'. Check 'Paths to secret' parameter" | Write-Error
+           exit -1
+       }
+       $engine = $tokens[0]
+       $value = $tokens[1]
+       return "{'label': '$label', 'engine': '$engine', 'path': '$value', 'explicit': '$explicit'}" | ConvertFrom-Json
+   } else {
+       "Vault secret engine version is #{engineVersion}. Only v1 or v2 are expected" | Write-Error
+       exit -1
+   }
 }
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -54,12 +69,20 @@ if ("#{token}" -ne "##{token}") {
 
 $path = @("#{path}" -split "`n" | Foreach-Object { $_.Trim() })
 $res = $path | Foreach-Object {
-	if (![string]::IsNullOrWhiteSpace($_)) {
-    	$current = Split-SecretPath $_
-    	"Obtaining secret from $($current.path)" | Write-Host
-    	$secret = ((Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"}  "#{vaultUrl}/v1/$($current.path)" -Method get -UseBasicParsing).Content | ConvertFrom-Json).data
-    	$secret.psobject.properties | Foreach-Object {
-        	"{'label': '$($current.label)', 'explicit': '$($current.explicit)', 'name': '$($_.Name)', 'value': '$($_.value)'}" | ConvertFrom-Json   
+    if (![string]::IsNullOrWhiteSpace($_)) {
+        $current = Split-SecretPath $_
+        "Obtaining secret from $($current.path)" | Write-Host
+
+        if ("#{engineVersion}" -eq "v1") {
+            $secret = ((Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"}  "#{vaultUrl}/v1/$($current.path)" -Method get -UseBasicParsing).Content | ConvertFrom-Json).data
+        } elseif ("#{engineVersion}" -eq "v2") {
+            $secret = ((Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"}  "#{vaultUrl}/v1/$($current.engine)/data/$($current.path)" -Method get -UseBasicParsing).Content | ConvertFrom-Json).data.data
+        } else {
+            "Vault secret engine version is #{engineVersion}. Only v1 or v2 are expected" | Write-Error
+            exit -1
+        }
+        $secret.psobject.properties | Foreach-Object {
+            "{'label': '$($current.label)', 'explicit': '$($current.explicit)', 'name': '$($_.Name)', 'value': '$($_.value)'}" | ConvertFrom-Json
         }
     }
 }
@@ -74,24 +97,19 @@ if ("#{token}" -ne "##{token}") {
     Invoke-WebRequest -Headers @{"X-Vault-Token"="$vault_token"} "#{vaultUrl}/v1/auth/token/revoke-self" -Method post -UseBasicParsing | Out-Null
 }
 
-$sensitiveOutputVariablesSupported = ((Get-Command 'Set-OctopusVariable').Parameters.GetEnumerator() | Where-Object { $_.key -eq "Sensitive" }) -ne $null
-if (-not $sensitiveOutputVariablesSupported -and !("#{notsensitive}" -eq "True")) {
-    Write-Warning "Values from vault will be added to the Octopus deployment pipeline as normal values. Please upgrade to Octopus 2018.5.2 or newer so the values from your vault can be added as sensitive values."
-}
- 
 $res | Foreach-Object {
     if ("#{resultName}" -ne "##{resultName}") {
         $prefix = "#{resultName}."
     } else {
         $prefix = ""
     }
-    
+
     if (($path.Length -eq 1) -and ($_.explicit -eq "False")) {
         $label = ""
     } else {
         $label = "$($_.label)."
     }
-    
+
     $name = $prefix + $label + $_.name
 
     "Writing ##{Octopus.Action[#{Octopus.Step.Name}].Output.$name}" | Write-Host
