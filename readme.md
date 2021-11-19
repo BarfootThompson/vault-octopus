@@ -32,7 +32,7 @@ This readme does not cover secure setup of Octopus Deploy installation and Vault
 
 When you adding a new  step to your process you get to choose a template. "Read Vault Secret" templates will apear on the list. When you choose it you will see the following screen (top part).
 
-![Image](images/CreatingStep.png
+![Image](images/CreatingStep.png)
 
 Here you name your build step (choose an adequate name) and select whether you run the step on Deployment Targets or on the Octopus Server. Consider what you are trying to achieve. If you need to just get a single secret or a handful of secrets from Vault that are independent from deployment targets your best bet is using Octopus Server and leaving advanced settings alone. This way, the step will only run once no matter how many deployment targets you have.
 
