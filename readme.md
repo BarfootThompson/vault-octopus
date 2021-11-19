@@ -50,8 +50,8 @@ After you configured the above, procedd setting your step parameters.
 - **Vault Token** - alternative to Role Id/Secret Id form of authentication with Vault.
 - **Use Windows Credential Manager**. Ignored if Vault Token is specified. Use Windows Credential Manager to reterive Role Id and Secret Id. In this case Role Id and Secret Id parameters contain the names in the Windows Credential Manager. See below.
 - **Renew Token**. Ignored if Vault Token is not specified. If checked, a call to Vault self-renew is made in the end of the step.
-- **Don't Use Sensitive Output Variables**. Check this, if your version of Octopus Deploy does not support Sensitive Output Variables, or if you don't want this step to produce sensitive variables (useful for debugging)
 - **Output Variable Prefix** - optional prefix for Output Variables. See below.
+- **Vault secret engine version** - This is the version of the Vault secret engine the secrets for this process is stored in: either v1 or v2.
 
 ## Authenticating with a token
 
