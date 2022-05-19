@@ -20,6 +20,8 @@ Optionall you can change the custom step template logo to [another image](vault.
 
 ![Image](images/ChangeLogo.png)
 
+_It was pointed out to me that the step template imports Credential Manager module, even if it is not used, and this Credential Manager is a dependency for this step template. Install it on each deployment target with `Install-Module CredentialManager –Scope AllUsers -Force`_
+
 ## Note on security
 
 Octopus Administrators enjoy quite a bit degree of control over Octopus Deploy server. If Octopus Deploy server is installed to run under a local adminstrator (the default option) Octopus Deploy Server admins will be able to run arbitrary scripts on it as local administrator. Any Octopus deploy user that can configure build steps and run them will enjoy this ability too.
