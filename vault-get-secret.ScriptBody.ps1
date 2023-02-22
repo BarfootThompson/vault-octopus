@@ -82,7 +82,12 @@ $res = $path | Foreach-Object {
             exit -1
         }
         $secret.psobject.properties | Foreach-Object {
-            "{'label': '$($current.label)', 'explicit': '$($current.explicit)', 'name': '$($_.Name)', 'value': '$($_.value)'}" | ConvertFrom-Json
+            [pscustomobject]@{
+                label = $current.label
+                explicit = $current.explicit
+                name = $_.Name
+                value = $_.value
+            }
         }
     }
 }
